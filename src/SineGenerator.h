@@ -1,17 +1,15 @@
 #pragma once
 #include <cmath>
 
-#define PI 3.1415926535
-
 class SineGenerator
 {
-	double phase;
-	float period;
-	float sample_rate;
-	float wave_frequency;
+    static constexpr double PI = 3.1415926535;
+    double phase;
+    double sample_rate;
+
 public:
-	SineGenerator(float _sample_rate, float _wave_frequency);
-	~SineGenerator();
+    SineGenerator(float _sample_rate);
+    ~SineGenerator() = default;
 
 	void generate_wave(float* dest, int count, float freq);
 };

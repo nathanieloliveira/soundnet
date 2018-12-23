@@ -15,7 +15,7 @@ find_library(portaudio ./portaudio)
 # include dspfilters lib
 add_subdirectory(DSPFilters)
 find_library(DSPFilters ./DSPFilters)
-include_directories(./DSPFilters/)
+include_directories(./DSPFilters/include)
 
 message(STATUS portaudio libraries: ${PA_LIBRARIES})
 
@@ -33,10 +33,21 @@ add_subdirectory(fftw)
 find_library(fftw3f ./fftw)
 include_directories(./fftw/api/)
 
+# find boost
+set(Boost_USE_STATIC_LIBS OFF)
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_RUNTIME OFF)
+find_package(Boost 1.68.0)
+
 #include sources
 #include_directories(include)
 file(GLOB SOURCES "src/*.cpp" "src/*.h" "include/*.h")
 
-add_executable(snet ${SOURCES})
-target_link_libraries(snet portaudio_static DSPFilters fftw3f)
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DSNET_DEBUG")
+
+if(Boost_FOUND)
+    include_directories(${Boost_INCLUDE_DIRS})
+    add_executable(snet ${SOURCES})
+    target_link_libraries(snet portaudio_static DSPFilters fftw3f)
+endif()
 

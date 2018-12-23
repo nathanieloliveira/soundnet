@@ -14,7 +14,7 @@ fsk_demodulator::fsk_demodulator(float _sample_rate, int _samples_per_symbol, in
 	freq_step = sample_rate / samples_per_symbol;
 	data_size = samples_per_symbol / 2;
 
-	carrier_bucket = roundf(carrier_frequency / (sample_rate / samples_per_symbol));
+    carrier_bucket = roundf(carrier_frequency / (sample_rate / samples_per_symbol));
 
 	// initial value for early gate pointer
 	gate_p = samples_per_symbol - 1;
@@ -23,7 +23,7 @@ fsk_demodulator::fsk_demodulator(float _sample_rate, int _samples_per_symbol, in
 	spec_density = fftwf_alloc_real(data_size);
 	early_gate = fftwf_alloc_real(samples_per_symbol * 2);
 	fft_out = fftwf_alloc_complex(data_size);
-	plan = fftwf_plan_dft_r2c_1d(samples_per_symbol, fft_in, fft_out, FFTW_ESTIMATE);
+    plan = fftwf_plan_dft_r2c_1d(samples_per_symbol, fft_in, fft_out, FFTW_ESTIMATE);
 
 	memset(early_gate, 0, samples_per_symbol * 2 * sizeof(float));
 }
@@ -40,7 +40,7 @@ fsk_demodulator::~fsk_demodulator()
 
 void fsk_demodulator::calculate_spectral_density(fftwf_complex* source, float* dest, int count)
 {
-	for (int i = 0; i < count; i++)
+    for (int i = 0; i < count; i++)
 	{
 		float real = source[i][0];
 		float imag = source[i][1];
@@ -54,12 +54,12 @@ void fsk_demodulator::calculate_spectral_density(fftwf_complex* source, float* d
 
 float fsk_demodulator::total_energy(fftwf_complex* dft, int count)
 {
-	float mul = 1 / (float) data_size;
+    float mul = 1 / (float) data_size;
 	float acc = 0;
-	for (int i = 0; i < data_size; i++)
+    for (int i = 0; i < data_size; i++)
 	{
 		float real = dft[i][0];
-		float imag = dft[i][1];
+        float imag = dft[i][1];
 
 		real /= count * 2;
 		imag /= count * 2;
@@ -73,20 +73,20 @@ float fsk_demodulator::total_power(float* spectre, int count)
 {
 	float total_power = 0;
 	float freq_step = sample_rate / (count * 2);
-	for (int i = 1; i < data_size; i++)
-	{
-		total_power += spectre[i] * i * freq_step;
+    for (int i = 1; i < data_size; i++)
+    {
+        total_power += spectre[i] * i * freq_step;
 	}
 	return total_power;
 }
 
 int fsk_demodulator::find_bucket_and_energy(float* energy_out, float* psd)
 {
-	int bucket = 0;
+    int bucket = 0;
 	float max = 0;
-	int low_symbol_bucket = carrier_bucket - symbols / 2;
-	int high_symbol_bucket = carrier_bucket + 1 + symbols / 2;
-	for (int i = low_symbol_bucket; i < high_symbol_bucket; i++)
+    int low_symbol_bucket = carrier_bucket - symbols / 2;
+    int high_symbol_bucket = carrier_bucket + 1 + symbols / 2;
+    for (int i = low_symbol_bucket; i < high_symbol_bucket; i++)
 	{
 		float v = psd[i];
 		if (v > max)
@@ -96,13 +96,13 @@ int fsk_demodulator::find_bucket_and_energy(float* energy_out, float* psd)
 		}
 	}
 	*energy_out = max;
-	return bucket;
+    return bucket;
 }
 
 int fsk_demodulator::find_symbol(int bucket)
 {
 	int symbol = -1;
-	int offset = bucket - carrier_bucket;
+    int offset = bucket - carrier_bucket;
 	if (offset == 0)
 	{
 		return OFFSET_ZERO;
@@ -138,7 +138,7 @@ int fsk_demodulator::demodulate_symbol(const float* buffer)
 	float avg_energy = total_energy(fft_out, data_size);
 
 	// calculate early fft
-	for (int i = 0; i < gate_p; i++)
+    for (int i = 0; i < gate_p; i++)
 	{
 		early_gate[gate_p + i] = buffer[i];
 	}
@@ -168,8 +168,8 @@ int fsk_demodulator::demodulate_symbol(const float* buffer)
 
 	// adjust gate p if needed
 	if (bucket_early != bucket)
-	{
-		if (abs(max - max_early) < max_early * 0.05)
+    {
+        if (abs(max - max_early) < max_early * 0.05f)
 		{
 			// do nothing
 		}
@@ -191,18 +191,18 @@ int fsk_demodulator::demodulate_symbol(const float* buffer)
 		{
 			gate_p = samples_per_symbol / 2;
 		}
-		printf("                 gate_p: %d\n", gate_p);
+//        printf("                 gate_p: %d\n", gate_p);
 	}
 
-	//for (int i = 0; i < gate_p; i++)
-	//{
-	//	early_gate[i] = *(buffer + samples_per_symbol - gate_p + i);
-	//}
+    //for (int i = 0; i < gate_p; i++)
+    //{
+    //	early_gate[i] = *(buffer + samples_per_symbol - gate_p + i);
+    //}
 
 	// fill early gate
 	const float* buffer_end = buffer + samples_per_symbol;
-	std::copy(buffer_end - gate_p, buffer_end, early_gate);
-	//memcpy(early_gate, buffer_end - gate_p, samples_per_symbol - gate_p);
+    std::copy(buffer_end - gate_p, buffer_end, early_gate);
+    //memcpy(early_gate, buffer_end - gate_p, samples_per_symbol - gate_p);
 
 	return find_symbol(bucket_early);
 }

@@ -1,24 +1,20 @@
 #include "SineGenerator.h"
 
-SineGenerator::SineGenerator(float _sample_rate, float _wave_frequency)
-	: phase(0.0f),
-	sample_rate(_sample_rate),
-	wave_frequency(_wave_frequency)
+SineGenerator::SineGenerator(float _sample_rate)
+    : phase(0.0),
+    sample_rate(static_cast<double>((_sample_rate)))
 {
-	period = 2 * PI * wave_frequency * (1 / sample_rate);
-}
 
-SineGenerator::~SineGenerator()
-{
 }
 
 void SineGenerator::generate_wave(float* dest, int count, float frequency)
 {
-	double p = 2 * PI * frequency * (1 / sample_rate);
+    double freq = static_cast<double>(frequency);
+    double p = 2 * PI * freq * (1.0 / sample_rate);
 	for (int i = 0; i < count; i++)
 	{
-		double v = sin(phase);
-		dest[i] += v;
+        auto v = std::sin(phase);
+        dest[i] += static_cast<float>(v);
 		phase += p;
 	}
 
