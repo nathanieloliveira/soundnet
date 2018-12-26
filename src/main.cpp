@@ -16,8 +16,8 @@
 #define SAMPLE_RATE 48000.0
 #define CARRIER_FREQUENCY 7500.0f
 #define OUTPUT_CHANNELS 2
-#define FFT_SIZE 64
-#define BITS_PER_SYMBOL 4
+#define FFT_SIZE 128
+#define BITS_PER_SYMBOL 2
 
 struct Generators
 {
@@ -32,6 +32,15 @@ static fsk_modulator fsk_mod(SAMPLE_RATE, FFT_SIZE, BITS_PER_SYMBOL, CARRIER_FRE
 static fsk_demodulator fsk_dem(SAMPLE_RATE, FFT_SIZE, BITS_PER_SYMBOL, CARRIER_FREQUENCY);
 
 static media_access media(SAMPLE_RATE, FFT_SIZE, BITS_PER_SYMBOL, CARRIER_FREQUENCY);
+
+#define SEQUENCE_SIZE 35
+static std::array<int, SEQUENCE_SIZE> symbol_sequence = {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1,
+                                              0, 0, 1, 1, // size
+                                              0, 0, 0, 1, // control
+                                              0, 0, 0, 0, // address src
+                                              0, 0, 0, 2, // addr dest
+                                              0, 0, 2, 0  // checksum
+};
 
 int stream_callback(const void* input,
 	void* output,
@@ -54,7 +63,8 @@ int stream_callback(const void* input,
 	//float* b = buffer.data();
 	//f.process(frame_count, &b);
 
-    symbol = symbol == 0 ? 1 : 0;
+    symbol = symbol_sequence[count1++];
+    if (count1 >= SEQUENCE_SIZE) count1 = 0;
 
     fsk_mod.modulate_symbol(symbol, buffer.data());
 
@@ -156,13 +166,14 @@ int main(int argc, char** argv)
         printf("got packet\n");
     });
 
-    Pa_Sleep(5000);
+//    Pa_Sleep(5000);
+    getchar();
 
 	Pa_StopStream(output_stream);
 	Pa_CloseStream(output_stream);
 
 	error = Pa_Terminate();
-	getchar();
+
 	return 0;
 
 error:

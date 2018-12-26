@@ -27,6 +27,11 @@ constexpr int PREAMBLE_SIZE = 15;
 constexpr int PREAMBLE_SYMBOL_SEQ[] = {1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1};
 constexpr auto PREAMBLE_ARRAY = std::array<int, PREAMBLE_SIZE>{1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1};
 
+enum ERRORS : uint8_t {
+    INVALID_SIZE
+};
+
+constexpr size_t MIN_PACKET_SIZE     = 5;
 constexpr size_t MAX_PACKET_SIZE     = 133; // this is the maximum size of a layer 2 packet
 constexpr size_t MAX_FRAME_SIZE      = 128;
 
@@ -76,15 +81,18 @@ class media_access
     void check_for_preamble();
     void preamble_found();
     void check_packet_complete();
-    bool deserialize_packet(mac_packet& packet, size_t size, size_t min_symbols);
+    bool deserialize_packet(mac_packet& packet, uint8_t size, size_t min_symbols);
     bitset symbol_to_bits(int symbol);
-    size_t get_current_packet_size();
+    uint8_t get_current_packet_size();
+    uint8_t calc_checksum(const std::vector<block> &data) const;
 
 public:
     media_access(float _sample_rate, int samples_per_symbol, int _bits_per_symbol, float center_frequency);
 
     void process(const float* input, float* output, int count);
     void set_packet_callback(packet_callback callback);
+
+    void dump_last_symbols() const;
 };
 
 #endif // MEDIA_ACCESS_H
